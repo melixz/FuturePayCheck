@@ -51,6 +51,22 @@ def get_vacancy_count(language):
         return 0
 
 
+def extract_salaries(vacancies):
+    salaries = []
+    for vacancy in vacancies:
+        salary = vacancy.get('salary')
+        if salary:
+            salaries.append({
+                'from': salary.get('from'),
+                'to': salary.get('to'),
+                'currency': salary.get('currency'),
+                'gross': salary.get('gross')
+            })
+        else:
+            salaries.append(None)
+    return salaries
+
+
 vacancies_all_time, total_all_time = get_vacancies(params_all_time)
 print(f"Количество вакансий за всё время: {total_all_time}")
 
@@ -64,10 +80,16 @@ print("Количество вакансий для популярных язы�
 formatted_vacancy_counts = json.dumps(filtered_vacancy_counts, indent=4, ensure_ascii=False)
 print(formatted_vacancy_counts)
 
-print("\nПримеры вакансий за последний месяц:")
-for item in vacancies_last_month[:5]:
-    print(f"Название: {item['name']}")
-    print(f"Компания: {item['employer']['name']}")
-    print(f"Город: {item['area']['name']}")
-    print(f"URL: {item['alternate_url']}")
-    print("=" * 50)
+print("\nЗарплаты для вакансий по языку Python:")
+python_params = {
+    "text": "программист Python",
+    "area": 1,
+    "per_page": 20,
+    "period": 30
+}
+
+python_vacancies, _ = get_vacancies(python_params)
+python_salaries = extract_salaries(python_vacancies)
+
+for salary in python_salaries[:20]:
+    print(salary)
