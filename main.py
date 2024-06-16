@@ -56,15 +56,23 @@ def extract_salaries(vacancies):
     for vacancy in vacancies:
         salary = vacancy.get('salary')
         if salary:
-            salaries.append({
-                'from': salary.get('from'),
-                'to': salary.get('to'),
-                'currency': salary.get('currency'),
-                'gross': salary.get('gross')
-            })
+            salaries.append(predict_rub_salary(salary))
         else:
             salaries.append(None)
     return salaries
+
+
+def predict_rub_salary(salary):
+    if salary.get('currency') != 'RUR':
+        return None
+    if salary.get('from') and salary.get('to'):
+        return (salary.get('from') + salary.get('to')) / 2
+    elif salary.get('from'):
+        return salary.get('from') * 1.2
+    elif salary.get('to'):
+        return salary.get('to') * 0.8
+    else:
+        return None
 
 
 vacancies_all_time, total_all_time = get_vacancies(params_all_time)
@@ -80,7 +88,7 @@ print("Количество вакансий для популярных язы�
 formatted_vacancy_counts = json.dumps(filtered_vacancy_counts, indent=4, ensure_ascii=False)
 print(formatted_vacancy_counts)
 
-print("\nЗарплаты для вакансий по языку Python:")
+print("\nОжидаемые оклады по языку Python:")
 python_params = {
     "text": "программист Python",
     "area": 1,
