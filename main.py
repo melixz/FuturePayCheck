@@ -1,4 +1,5 @@
 import requests
+import json
 
 BASE_URL = "https://api.hh.ru/vacancies"
 
@@ -57,12 +58,11 @@ vacancies_last_month, total_last_month = get_vacancies(params_last_month)
 print(f"Количество вакансий за последний месяц: {total_last_month}")
 
 vacancy_counts = {language: get_vacancy_count(language) for language in popular_languages}
-
-
 filtered_vacancy_counts = {lang: count for lang, count in vacancy_counts.items() if count > 100}
 
 print("Количество вакансий для популярных языков программирования (больше 100):")
-print(filtered_vacancy_counts)
+formatted_vacancy_counts = json.dumps(filtered_vacancy_counts, indent=4, ensure_ascii=False)
+print(formatted_vacancy_counts)
 
 print("\nПримеры вакансий за последний месяц:")
 for item in vacancies_last_month[:5]:
