@@ -75,6 +75,28 @@ def predict_rub_salary(salary):
         return None
 
 
+def calculate_average_salaries():
+    average_salaries = {}
+    for language in popular_languages:
+        language_params = {
+            "text": f"программист {language}",
+            "area": 1,
+            "per_page": 20,
+            "period": 30
+        }
+        language_vacancies, _ = get_vacancies(language_params)
+        language_salaries = extract_salaries(language_vacancies)
+        language_salaries = [salary for salary in language_salaries if salary is not None]
+        if language_salaries:
+            average_salary = int(sum(language_salaries) / len(language_salaries))
+            average_salaries[language] = {
+                "vacancies_found": get_vacancy_count(language),
+                "vacancies_processed": len(language_salaries),
+                "average_salary": average_salary
+            }
+    return average_salaries
+
+
 vacancies_all_time, total_all_time = get_vacancies(params_all_time)
 print(f"Количество вакансий за всё время: {total_all_time}")
 
@@ -101,3 +123,8 @@ python_salaries = extract_salaries(python_vacancies)
 
 for salary in python_salaries[:20]:
     print(salary)
+
+average_salaries = calculate_average_salaries()
+print("\nСредние зарплаты по языкам программирования:")
+formatted_average_salaries = json.dumps(average_salaries, indent=4, ensure_ascii=False)
+print(formatted_average_salaries)
