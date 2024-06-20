@@ -6,13 +6,13 @@ BASE_URL = "https://api.hh.ru/vacancies"
 params_all_time = {
     "text": "программист",
     "area": 1,
-    "per_page": 20
+    "per_page": 100
 }
 
 params_last_month = {
     "text": "программист",
     "area": 1,
-    "per_page": 20,
+    "per_page": 100,
     "period": 30
 }
 
@@ -81,16 +81,26 @@ def calculate_average_salaries():
         language_params = {
             "text": f"программист {language}",
             "area": 1,
-            "per_page": 20,
+            "per_page": 100,
             "period": 30
         }
-        language_vacancies, _ = get_vacancies(language_params)
+        language_vacancies, total_found = get_vacancies(language_params)
         language_salaries = extract_salaries(language_vacancies)
         language_salaries = [salary for salary in language_salaries if salary is not None]
+
+        pages_to_process = (1000 - len(language_salaries)) // 100 + 1
+        for page in range(2, pages_to_process + 1):
+            language_params["page"] = page
+            page_vacancies, _ = get_vacancies(language_params)
+            page_salaries = extract_salaries(page_vacancies)
+            language_salaries.extend([salary for salary in page_salaries if salary is not None])
+            if len(language_salaries) >= 1000:
+                break
+
         if language_salaries:
             average_salary = int(sum(language_salaries) / len(language_salaries))
             average_salaries[language] = {
-                "vacancies_found": get_vacancy_count(language),
+                "vacancies_found": total_found,
                 "vacancies_processed": len(language_salaries),
                 "average_salary": average_salary
             }
@@ -114,7 +124,7 @@ print("\nОжидаемые оклады по языку Python:")
 python_params = {
     "text": "программист Python",
     "area": 1,
-    "per_page": 20,
+    "per_page": 100,
     "period": 30
 }
 
