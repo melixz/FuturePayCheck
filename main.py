@@ -4,6 +4,7 @@ import os
 import datetime
 import time
 from dotenv import load_dotenv
+from terminaltables import AsciiTable
 
 BASE_URL_HH = "https://api.hh.ru/vacancies"
 BASE_URL_SJ = "https://api.superjob.ru/2.0/vacancies/"
@@ -148,6 +149,17 @@ def calculate_average_salaries_sj(api_key):
     return average_salaries
 
 
+def print_table(title, data):
+    table_data = [
+        ["Язык программирования", "Вакансий найдено", "Вакансий обработано", "Средняя зарплата"]
+    ]
+    for language, stats in data.items():
+        table_data.append([language, stats.get("vacancies_found", "-"), stats.get("vacancies_processed", "-"),
+                           stats.get("average_salary", "-")])
+    table = AsciiTable(table_data, title)
+    print(table.table)
+
+
 def main():
     load_dotenv()
     sj_api_key = os.getenv("SJ_SECRET_KEY")
@@ -178,8 +190,8 @@ def main():
     formatted_average_salaries_hh = json.dumps(average_salaries_hh, indent=4, ensure_ascii=False)
     print(formatted_average_salaries_hh)
 
-    print("\nСредние зарплаты по языкам программирования (SuperJob):")
     average_salaries_sj = calculate_average_salaries_sj(sj_api_key)
+    print("\nСредние зарплаты по языкам программирования (SuperJob):")
     formatted_average_salaries_sj = json.dumps(average_salaries_sj, indent=4, ensure_ascii=False)
     print(formatted_average_salaries_sj)
 
@@ -191,6 +203,9 @@ def main():
     print("Названия вакансий с SuperJob:")
     for title in all_titles:
         print(title)
+
+    print_table("HeadHunter Statistics", average_salaries_hh)
+    print_table("SuperJob Statistics", average_salaries_sj)
 
 
 if __name__ == "__main__":
