@@ -127,6 +127,27 @@ def calculate_average_salaries(get_vacancies_func, extract_salaries_func):
     return average_salaries
 
 
+def calculate_average_salaries_sj(api_key):
+    average_salaries = {}
+    for language in LANGUAGES:
+        vacancies = get_vacancies_sj(language, api_key)
+        salaries = []
+        for vacancy in vacancies:
+            parts = vacancy.split(', ')
+            if len(parts) == 3:
+                salary = parts[2]
+                if salary != 'None':
+                    salaries.append(float(salary))
+
+        if salaries:
+            average_salary = int(sum(salaries) / len(salaries))
+            average_salaries[language] = {
+                "vacancies_processed": len(salaries),
+                "average_salary": average_salary
+            }
+    return average_salaries
+
+
 def main():
     load_dotenv()
     sj_api_key = os.getenv("SJ_SECRET_KEY")
@@ -156,6 +177,11 @@ def main():
     print("\nСредние зарплаты по языкам программирования (HeadHunter):")
     formatted_average_salaries_hh = json.dumps(average_salaries_hh, indent=4, ensure_ascii=False)
     print(formatted_average_salaries_hh)
+
+    print("\nСредние зарплаты по языкам программирования (SuperJob):")
+    average_salaries_sj = calculate_average_salaries_sj(sj_api_key)
+    formatted_average_salaries_sj = json.dumps(average_salaries_sj, indent=4, ensure_ascii=False)
+    print(formatted_average_salaries_sj)
 
     print("\nПолучение названий вакансий для популярных языков с SuperJob...")
     all_titles = []
