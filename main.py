@@ -23,13 +23,24 @@ params_last_month = {"text": "программист", "area": AREA_RUSSIA, "per
 
 
 def get_vacancies_hh(params):
-    try:
-        response = requests.get(BASE_URL_HH, params=params)
-        response.raise_for_status()
-        return response.json().get('items', []), response.json().get('found', 0)
-    except requests.exceptions.RequestException as e:
-        print(f"Ошибка соединения: {e}")
-        return [], 0
+    page = 0
+    vacancies = []
+    total_found = 0
+    while True:
+        params['page'] = page
+        try:
+            response = requests.get(BASE_URL_HH, params=params)
+            response.raise_for_status()
+            data = response.json()
+            vacancies.extend(data.get('items', []))
+            total_found = data.get('found', 0)
+            if not data.get('pages') or page >= data.get('pages') - 1:
+                break
+            page += 1
+        except requests.exceptions.RequestException as e:
+            print(f"Ошибка соединения: {e}")
+            break
+    return vacancies, total_found
 
 
 def get_vacancy_count_hh(language):
