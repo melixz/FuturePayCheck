@@ -28,18 +28,14 @@ def get_vacancies_hh(params):
     total_found = 0
     while True:
         params['page'] = page
-        try:
-            response = requests.get(BASE_URL_HH, params=params)
-            response.raise_for_status()
-            data = response.json()
-            vacancies.extend(data.get('items', []))
-            total_found = data.get('found', 0)
-            if not data.get('pages') or page >= data.get('pages') - 1:
-                break
-            page += 1
-        except requests.exceptions.RequestException as e:
-            print(f"Ошибка соединения: {e}")
+        response = requests.get(BASE_URL_HH, params=params)
+        response.raise_for_status()
+        data = response.json()
+        vacancies.extend(data.get('items', []))
+        total_found = data.get('found', 0)
+        if not data.get('pages') or page >= data.get('pages') - 1:
             break
+        page += 1
     return vacancies, total_found
 
 
@@ -183,11 +179,15 @@ def main():
     load_dotenv()
     sj_api_key = os.getenv("SJ_SECRET_KEY")
 
-    vacancies_all_time, total_all_time = get_vacancies_hh(params_all_time)
-    print(f"Количество вакансий за всё время: {total_all_time}")
+    try:
+        vacancies_all_time, total_all_time = get_vacancies_hh(params_all_time)
+        print(f"Количество вакансий за всё время: {total_all_time}")
 
-    vacancies_last_month, total_last_month = get_vacancies_hh(params_last_month)
-    print(f"Количество вакансий за последний месяц: {total_last_month}")
+        vacancies_last_month, total_last_month = get_vacancies_hh(params_last_month)
+        print(f"Количество вакансий за последний месяц: {total_last_month}")
+    except requests.exceptions.RequestException as e:
+        print(f"Ошибка соединения: {e}")
+        return
 
     vacancy_counts = {language: get_vacancy_count_hh(language) for language in LANGUAGES}
     filtered_vacancy_counts = {lang: count for lang, count in vacancy_counts.items() if count > 100}
