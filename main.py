@@ -11,8 +11,15 @@ BASE_URL_SJ = "https://api.superjob.ru/2.0/vacancies/"
 
 LANGUAGES = ["JavaScript", "Python", "Java", "TypeScript", "C#", "PHP", "C++", "Shell", "C", "Ruby"]
 
-params_all_time = {"text": "программист", "area": 1, "per_page": 100}
-params_last_month = {"text": "программист", "area": 1, "per_page": 100, "period": 30}
+AREA_RUSSIA = 1
+PER_PAGE = 100
+PERIOD_LAST_MONTH = 30
+TOWN_MOSCOW = 4
+CATALOGUES_PROGRAMMING = 48
+NO_AGREEMENT = 1
+
+params_all_time = {"text": "программист", "area": AREA_RUSSIA, "per_page": PER_PAGE}
+params_last_month = {"text": "программист", "area": AREA_RUSSIA, "per_page": PER_PAGE, "period": PERIOD_LAST_MONTH}
 
 
 def get_vacancies_hh(params):
@@ -26,7 +33,7 @@ def get_vacancies_hh(params):
 
 
 def get_vacancy_count_hh(language):
-    params = {"text": language, "area": 1, "per_page": 0, "search_field": "name"}
+    params = {"text": language, "area": AREA_RUSSIA, "per_page": 0, "search_field": "name"}
     try:
         response = requests.get(BASE_URL_HH, params=params)
         response.raise_for_status()
@@ -55,14 +62,14 @@ def predict_rub_salary_hh(salary):
 
 def get_vacancies_sj(language, api_key):
     headers = {"X-Api-App-Id": api_key}
-    search_from = datetime.datetime.now() - datetime.timedelta(days=30)
+    search_from = datetime.datetime.now() - datetime.timedelta(days=PERIOD_LAST_MONTH)
     unix_time = int(time.mktime(search_from.timetuple()))
     payload = {
         "date_published_from": unix_time,
         "keyword": language,
-        "town": 4,
-        "catalogues": 48,
-        "no_agreement": 1,
+        "town": TOWN_MOSCOW,
+        "catalogues": CATALOGUES_PROGRAMMING,
+        "no_agreement": NO_AGREEMENT,
         "page": 0,
     }
     vacancies = []
@@ -104,12 +111,13 @@ def predict_salary(salary_from, salary_to):
 def calculate_average_salaries(get_vacancies_func, extract_salaries_func):
     average_salaries = {}
     for language in LANGUAGES:
-        language_params = {"text": f"программист {language}", "area": 1, "per_page": 100, "period": 30}
+        language_params = {"text": f"программист {language}", "area": AREA_RUSSIA, "per_page": PER_PAGE,
+                           "period": PERIOD_LAST_MONTH}
         language_vacancies, total_found = get_vacancies_func(language_params)
         language_salaries = extract_salaries_func(language_vacancies)
         language_salaries = [salary for salary in language_salaries if salary is not None]
 
-        pages_to_process = (1000 - len(language_salaries)) // 100 + 1
+        pages_to_process = (1000 - len(language_salaries)) // PER_PAGE + 1
         for page in range(2, pages_to_process + 1):
             language_params["page"] = page
             page_vacancies, _ = get_vacancies_func(language_params)
@@ -178,7 +186,8 @@ def main():
     print(formatted_vacancy_counts)
 
     print("\nОжидаемые оклады по языку Python:")
-    python_params = {"text": "программист Python", "area": 1, "per_page": 100, "period": 30}
+    python_params = {"text": "программист Python", "area": AREA_RUSSIA, "per_page": PER_PAGE,
+                     "period": PERIOD_LAST_MONTH}
     python_vacancies, _ = get_vacancies_hh(python_params)
     python_salaries = extract_salaries_hh(python_vacancies)
 
