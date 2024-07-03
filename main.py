@@ -115,6 +115,9 @@ def get_found_vacancies(get_vacancies, get_salary, languages):
                 sum(average_salaries) / len(average_salaries)
             )
             vacancies_per_lang['vacancies_processed'] = len(average_salaries)
+        else:
+            vacancies_per_lang['average_salary'] = 0
+            vacancies_per_lang['vacancies_processed'] = 0
         vacancies_found[lang] = vacancies_per_lang
     return vacancies_found
 
