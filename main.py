@@ -110,14 +110,11 @@ def get_found_vacancies(get_vacancies, get_salary, languages):
                 if currency_in_rub:
                     salary = predict_rub_salary(salary_from, salary_to)
                     average_salaries.append(salary)
-        try:
+        if average_salaries:
             vacancies_per_lang['average_salary'] = int(
                 sum(average_salaries) / len(average_salaries)
             )
             vacancies_per_lang['vacancies_processed'] = len(average_salaries)
-        except ZeroDivisionError:
-            vacancies_per_lang['average_salary'] = 0
-            vacancies_per_lang['vacancies_processed'] = 0
         vacancies_found[lang] = vacancies_per_lang
     return vacancies_found
 
