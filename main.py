@@ -66,10 +66,10 @@ def get_sj_vacancies(language, api_key):
     while True:
         response = requests.get(BASE_URL_SJ, headers=headers, params=payload)
         response.raise_for_status()
-        page_data = response.json()
+        page_content = response.json()
         page = payload['page']
-        yield page_data['objects']
-        if not page_data['more']:
+        yield page_content['objects']
+        if not page_content['more']:
             break
         payload['page'] = page + 1
 
