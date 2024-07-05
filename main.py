@@ -63,11 +63,14 @@ def get_sj_vacancies(language, api_key):
         'no_agreement': NO_AGREEMENT,
         'page': 0,
     }
+    total_vacancies = 0
     while True:
         response = requests.get(BASE_URL_SJ, headers=headers, params=payload)
         response.raise_for_status()
         page_content = response.json()
-        yield page_content['objects'], page_content['total']
+        if payload['page'] == 0:
+            total_vacancies = page_content['total']
+        yield page_content['objects'], total_vacancies
         if not page_content['more']:
             break
         payload['page'] += 1
@@ -99,7 +102,7 @@ def get_found_vacancies(get_vacancies, get_salary, languages):
         average_salaries = []
         total_vacancies = 0
         for vacancies, found in get_vacancies(language):
-            total_vacancies = found  # количество вакансий берем из ответа API
+            total_vacancies = found
             for vacancy in vacancies:
                 if not isinstance(vacancy, dict):
                     continue
