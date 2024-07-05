@@ -41,13 +41,13 @@ def get_hh_vacancies(language):
     while True:
         response = requests.get(BASE_URL_HH, params=payload)
         response.raise_for_status()
-        page_data = response.json()
-        page = page_data['page']
-        pages = page_data['pages']
+        response_data = response.json()
+        page = response_data['page']
+        pages = response_data['pages']
         if page >= pages:
             break
         payload['page'] = page + 1
-        yield page_data['items']
+        yield response_data['items']
 
 
 def get_sj_vacancies(language, api_key):
@@ -118,13 +118,13 @@ def get_found_vacancies(get_vacancies, get_salary, languages):
 
 
 def format_table(vacancy_statistics, table_name):
-    data = []
+    vacancies_list = []
     for key, value in vacancy_statistics.items():
         data_string = [key]
         data_string.extend(list(value.values()))
-        data.append(data_string)
-    data = sorted(data, key=itemgetter(3), reverse=True)
-    data.insert(
+        vacancies_list.append(data_string)
+    vacancies_list = sorted(vacancies_list, key=itemgetter(3), reverse=True)
+    vacancies_list.insert(
         0,
         [
             'Язык программирования',
@@ -133,7 +133,7 @@ def format_table(vacancy_statistics, table_name):
             'Средняя зарплата',
         ],
     )
-    table = DoubleTable(data, table_name)
+    table = DoubleTable(vacancies_list, table_name)
     table.justify_columns = {
         0: 'left',
         1: 'center',
