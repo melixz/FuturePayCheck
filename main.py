@@ -97,28 +97,23 @@ def get_salary_from_sj(vacancy):
 def get_found_vacancies(get_vacancies, get_salary, languages):
     vacancies_found = {}
     for lang in languages:
-        vacancies_per_lang = {
-            'vacancies_found': 0,
-            'vacancies_processed': 0,
-            'average_salary': 0,
-        }
         average_salaries = []
-        for vacancies in get_vacancies(lang):
-            for vacancy in vacancies:
-                vacancies_per_lang['vacancies_found'] += 1
-                salary_from, salary_to, currency_in_rub = get_salary(vacancy)
-                if currency_in_rub:
-                    salary = predict_rub_salary(salary_from, salary_to)
-                    average_salaries.append(salary)
-        if average_salaries:
-            vacancies_per_lang['average_salary'] = int(
-                sum(average_salaries) / len(average_salaries)
-            )
-            vacancies_per_lang['vacancies_processed'] = len(average_salaries)
-        else:
-            vacancies_per_lang['average_salary'] = 0
-            vacancies_per_lang['vacancies_processed'] = 0
-        vacancies_found[lang] = vacancies_per_lang
+        for vacancy in (v for vs in get_vacancies(lang) for v in vs):
+            if not isinstance(vacancy, dict):
+                continue
+            salary_from, salary_to, currency_in_rub = get_salary(vacancy)
+            if currency_in_rub:
+                salary = predict_rub_salary(salary_from, salary_to)
+                average_salaries.append(salary)
+
+        vacancies_processed = len(average_salaries)
+        average_salary = int(sum(average_salaries) / vacancies_processed) if vacancies_processed else 0
+
+        vacancies_found[lang] = {
+            'vacancies_found': vacancies_processed,
+            'average_salary': average_salary,
+            'vacancies_processed': vacancies_processed
+        }
     return vacancies_found
 
 
