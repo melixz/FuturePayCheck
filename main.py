@@ -67,11 +67,10 @@ def get_sj_vacancies(language, api_key):
         response = requests.get(BASE_URL_SJ, headers=headers, params=payload)
         response.raise_for_status()
         page_content = response.json()
-        page = payload['page']
         yield page_content['objects']
         if not page_content['more']:
             break
-        payload['page'] = page + 1
+        payload['page'] += 1
 
 
 def predict_rub_salary(salary_from, salary_to):
@@ -95,10 +94,11 @@ def get_salary_from_sj(vacancy):
 
 
 def get_found_vacancies(get_vacancies, get_salary, languages):
-    vacancies_found = {}
-    for lang in languages:
+    vacancies_summary = {}
+    for language in languages:
         average_salaries = []
-        for vacancy in (v for vs in get_vacancies(lang) for v in vs):
+        vacancies = [vacancy for vacancies in get_vacancies(language) for vacancy in vacancies]
+        for vacancy in vacancies:
             if not isinstance(vacancy, dict):
                 continue
             salary_from, salary_to, currency_in_rub = get_salary(vacancy)
@@ -106,25 +106,25 @@ def get_found_vacancies(get_vacancies, get_salary, languages):
                 salary = predict_rub_salary(salary_from, salary_to)
                 average_salaries.append(salary)
 
-        vacancies_processed = len(average_salaries)
-        average_salary = int(sum(average_salaries) / vacancies_processed) if vacancies_processed else 0
+        total_vacancies = len(average_salaries)
+        average_salary = int(sum(average_salaries) / total_vacancies) if total_vacancies else 0
 
-        vacancies_found[lang] = {
-            'vacancies_found': vacancies_processed,
+        vacancies_summary[language] = {
+            'vacancies_found': total_vacancies,
             'average_salary': average_salary,
-            'vacancies_processed': vacancies_processed
+            'vacancies_processed': total_vacancies
         }
-    return vacancies_found
+    return vacancies_summary
 
 
 def format_table(vacancy_statistics, table_name):
-    vacancies_list = []
+    data = []
     for key, value in vacancy_statistics.items():
-        data_string = [key]
-        data_string.extend(list(value.values()))
-        vacancies_list.append(data_string)
-    vacancies_list = sorted(vacancies_list, key=itemgetter(3), reverse=True)
-    vacancies_list.insert(
+        data_row = [key]
+        data_row.extend(list(value.values()))
+        data.append(data_row)
+    data = sorted(data, key=itemgetter(2), reverse=True)
+    data.insert(
         0,
         [
             'Язык программирования',
@@ -133,7 +133,7 @@ def format_table(vacancy_statistics, table_name):
             'Средняя зарплата',
         ],
     )
-    table = DoubleTable(vacancies_list, table_name)
+    table = DoubleTable(data, table_name)
     table.justify_columns = {
         0: 'left',
         1: 'center',
