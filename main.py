@@ -151,7 +151,7 @@ def format_table(vacancy_statistics, table_name):
 if __name__ == '__main__':
     load_dotenv()
     sj_api_key = os.getenv('SJ_SECRET_KEY')
-    get_found_sj_vacancies = partial(get_sj_vacancies, api_key=sj_api_key)
+    sj_vacancies_finder = partial(get_sj_vacancies, api_key=sj_api_key)
     print('Сбор вакансий с HeadHunter...')
     hh_vacancies = get_found_vacancies(
         get_hh_vacancies,
@@ -161,7 +161,7 @@ if __name__ == '__main__':
     print('Готово!')
     print('Сбор вакансий с SuperJob...')
     sj_vacancies = get_found_vacancies(
-        get_found_sj_vacancies,
+        sj_vacancies_finder,
         get_salary_from_sj,
         LANGUAGES,
     )
