@@ -47,7 +47,7 @@ def get_hh_vacancies(language):
         if page >= pages:
             break
         payload['page'] = page + 1
-        yield response_data['items']
+        yield response_data['items'], response_data['found']
 
 
 def get_sj_vacancies(language, api_key):
@@ -67,7 +67,7 @@ def get_sj_vacancies(language, api_key):
         response = requests.get(BASE_URL_SJ, headers=headers, params=payload)
         response.raise_for_status()
         page_content = response.json()
-        yield page_content['objects']
+        yield page_content['objects'], page_content['total']
         if not page_content['more']:
             break
         payload['page'] += 1
@@ -97,22 +97,24 @@ def get_found_vacancies(get_vacancies, get_salary, languages):
     vacancies_summary = {}
     for language in languages:
         average_salaries = []
-        vacancies = [vacancy for vacancies in get_vacancies(language) for vacancy in vacancies]
-        for vacancy in vacancies:
-            if not isinstance(vacancy, dict):
-                continue
-            salary_from, salary_to, currency_in_rub = get_salary(vacancy)
-            if currency_in_rub:
-                salary = predict_rub_salary(salary_from, salary_to)
-                average_salaries.append(salary)
+        total_vacancies = 0
+        for vacancies, found in get_vacancies(language):
+            total_vacancies = found  # количество вакансий берем из ответа API
+            for vacancy in vacancies:
+                if not isinstance(vacancy, dict):
+                    continue
+                salary_from, salary_to, currency_in_rub = get_salary(vacancy)
+                if currency_in_rub:
+                    salary = predict_rub_salary(salary_from, salary_to)
+                    average_salaries.append(salary)
 
-        total_vacancies = len(average_salaries)
-        average_salary = int(sum(average_salaries) / total_vacancies) if total_vacancies else 0
+        vacancies_processed = len(average_salaries)
+        average_salary = int(sum(average_salaries) / vacancies_processed) if vacancies_processed else 0
 
         vacancies_summary[language] = {
             'vacancies_found': total_vacancies,
             'average_salary': average_salary,
-            'vacancies_processed': total_vacancies
+            'vacancies_processed': vacancies_processed
         }
     return vacancies_summary
 
