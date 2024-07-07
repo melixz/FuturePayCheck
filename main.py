@@ -68,7 +68,7 @@ def get_sj_vacancies(language, api_key):
         response = requests.get(BASE_URL_SJ, headers=headers, params=payload)
         response.raise_for_status()
         page_content = response.json()
-        if payload['page'] == 0:
+        if not payload['page']:
             total_vacancies = page_content['total']
         yield page_content['objects'], total_vacancies
         if not page_content['more']:
