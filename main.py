@@ -130,7 +130,9 @@ def format_table(vacancies_summary, table_name):
     table_data = []
     for language, stats in vacancies_summary.items():
         row = [language]
-        row.extend(list(stats.values()))
+        row.append(f"{stats['vacancies_found']:,}")  # Используем форматирование для чисел
+        row.append(f"{stats['vacancies_processed']:,}")
+        row.append(f"{stats['average_salary']:,}")
         table_data.append(row)
     table_data = sorted(table_data, key=itemgetter(2), reverse=True)
     table_data.insert(
