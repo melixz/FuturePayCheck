@@ -44,10 +44,12 @@ def get_hh_vacancies(language):
         response_data = response.json()
         current_page = response_data['page']
         total_pages = response_data['pages']
+        if current_page == 0:
+            total_vacancies = response_data['found']
         if current_page >= total_pages:
             break
         payload['page'] = current_page + 1
-        yield response_data['items'], response_data['found']
+        yield response_data['items'], total_vacancies
 
 
 def get_sj_vacancies(language, api_key):
@@ -68,7 +70,7 @@ def get_sj_vacancies(language, api_key):
         response = requests.get(BASE_URL_SJ, headers=headers, params=payload)
         response.raise_for_status()
         page_content = response.json()
-        if not payload['page']:
+        if payload['page'] == 0:
             total_vacancies = page_content['total']
         yield page_content['objects'], total_vacancies
         if not page_content['more']:
