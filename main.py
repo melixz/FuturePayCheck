@@ -85,6 +85,7 @@ def predict_rub_salary(salary_from, salary_to):
         return int(salary_to * 0.8)
     elif salary_from:
         return int(salary_from * 1.2)
+    return 0
 
 
 def get_salary_from_hh(vacancy):
@@ -111,7 +112,8 @@ def get_found_vacancies(get_vacancies, get_salary, languages):
                 salary_from, salary_to, currency_in_rub = get_salary(vacancy)
                 if currency_in_rub:
                     salary = predict_rub_salary(salary_from, salary_to)
-                    average_salaries.append(salary)
+                    if salary > 0:
+                        average_salaries.append(salary)
 
         vacancies_processed = len(average_salaries)
         average_salary = int(sum(average_salaries) / vacancies_processed) if vacancies_processed else 0
