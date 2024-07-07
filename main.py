@@ -42,11 +42,11 @@ def get_hh_vacancies(language):
         response = requests.get(BASE_URL_HH, params=payload)
         response.raise_for_status()
         response_data = response.json()
-        page = response_data['page']
-        pages = response_data['pages']
-        if page >= pages:
+        current_page = response_data['page']
+        total_pages = response_data['pages']
+        if current_page >= total_pages:
             break
-        payload['page'] = page + 1
+        payload['page'] = current_page + 1
         yield response_data['items'], response_data['found']
 
 
@@ -54,8 +54,8 @@ def get_sj_vacancies(language, api_key):
     headers = {
         'X-Api-App-Id': api_key,
     }
-    search_from = datetime.datetime.now() - datetime.timedelta(days=PERIOD_LAST_MONTH)
-    unix_time = int(time.mktime(search_from.timetuple()))
+    search_from_date = datetime.datetime.now() - datetime.timedelta(days=PERIOD_LAST_MONTH)
+    unix_time = int(time.mktime(search_from_date.timetuple()))
     payload = {
         'date_published_from': unix_time,
         'keyword': f'Программист {language}',
@@ -123,13 +123,13 @@ def get_found_vacancies(get_vacancies, get_salary, languages):
 
 
 def format_table(vacancy_statistics, table_name):
-    data = []
-    for key, value in vacancy_statistics.items():
-        data_row = [key]
-        data_row.extend(list(value.values()))
-        data.append(data_row)
-    data = sorted(data, key=itemgetter(2), reverse=True)
-    data.insert(
+    table_data = []
+    for language, stats in vacancy_statistics.items():
+        row = [language]
+        row.extend(list(stats.values()))
+        table_data.append(row)
+    table_data = sorted(table_data, key=itemgetter(2), reverse=True)
+    table_data.insert(
         0,
         [
             'Язык программирования',
@@ -138,7 +138,7 @@ def format_table(vacancy_statistics, table_name):
             'Средняя зарплата',
         ],
     )
-    table = DoubleTable(data, table_name)
+    table = DoubleTable(table_data, table_name)
     table.justify_columns = {
         0: 'left',
         1: 'center',
