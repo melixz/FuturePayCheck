@@ -31,7 +31,7 @@ CATALOGUES_PROGRAMMING = 48
 NO_AGREEMENT = 1
 
 
-def get_hh_vacancies(language):
+def fetch_hh_vacancies(language):
     payload = {
         'text': f'Программист {language}',
         'area': AREA_RUSSIA,
@@ -52,7 +52,7 @@ def get_hh_vacancies(language):
         yield response_data['items'], total_vacancies
 
 
-def get_sj_vacancies(language, api_key):
+def fetch_sj_vacancies(language, api_key):
     headers = {
         'X-Api-App-Id': api_key,
     }
@@ -88,28 +88,28 @@ def predict_rub_salary(salary_from, salary_to):
     return 0
 
 
-def get_salary_from_hh(vacancy):
+def extract_salary_from_hh(vacancy):
     salary = vacancy['salary']
     return salary['from'], salary['to'], salary['currency'] == 'RUR'
 
 
-def get_salary_from_sj(vacancy):
-    sal_from = vacancy['payment_from']
-    sal_to = vacancy['payment_to']
-    return sal_from, sal_to, vacancy['currency'] == 'rub'
+def extract_salary_from_sj(vacancy):
+    salary_from = vacancy['payment_from']
+    salary_to = vacancy['payment_to']
+    return salary_from, salary_to, vacancy['currency'] == 'rub'
 
 
-def get_found_vacancies(get_vacancies, get_salary, languages):
+def get_vacancies_summary(fetch_vacancies, extract_salary, languages):
     vacancies_summary = {}
     for language in languages:
         average_salaries = []
         total_vacancies = 0
-        for vacancies, found in get_vacancies(language):
+        for vacancies, found in fetch_vacancies(language):
             total_vacancies = found
             for vacancy in vacancies:
                 if not isinstance(vacancy, dict):
                     continue
-                salary_from, salary_to, currency_in_rub = get_salary(vacancy)
+                salary_from, salary_to, currency_in_rub = extract_salary(vacancy)
                 if currency_in_rub:
                     salary = predict_rub_salary(salary_from, salary_to)
                     if salary > 0:
@@ -126,9 +126,9 @@ def get_found_vacancies(get_vacancies, get_salary, languages):
     return vacancies_summary
 
 
-def format_table(vacancy_statistics, table_name):
+def format_table(vacancies_summary, table_name):
     table_data = []
-    for language, stats in vacancy_statistics.items():
+    for language, stats in vacancies_summary.items():
         row = [language]
         row.extend(list(stats.values()))
         table_data.append(row)
@@ -155,18 +155,18 @@ def format_table(vacancy_statistics, table_name):
 if __name__ == '__main__':
     load_dotenv()
     sj_api_key = os.getenv('SJ_SECRET_KEY')
-    sj_vacancies_finder = partial(get_sj_vacancies, api_key=sj_api_key)
+    sj_vacancies_finder = partial(fetch_sj_vacancies, api_key=sj_api_key)
     print('Сбор вакансий с HeadHunter...')
-    hh_vacancies = get_found_vacancies(
-        get_hh_vacancies,
-        get_salary_from_hh,
+    hh_vacancies = get_vacancies_summary(
+        fetch_hh_vacancies,
+        extract_salary_from_hh,
         LANGUAGES,
     )
     print('Готово!')
     print('Сбор вакансий с SuperJob...')
-    sj_vacancies = get_found_vacancies(
+    sj_vacancies = get_vacancies_summary(
         sj_vacancies_finder,
-        get_salary_from_sj,
+        extract_salary_from_sj,
         LANGUAGES,
     )
     print('Готово!')
