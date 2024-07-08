@@ -42,15 +42,15 @@ def fetch_hh_vacancies(language):
     while True:
         response = requests.get(BASE_URL_HH, params=payload)
         response.raise_for_status()
-        response_data = response.json()
-        current_page = response_data['page']
-        total_pages = response_data['pages']
+        vacancies_data = response.json()
+        current_page = vacancies_data['page']
+        total_pages = vacancies_data['pages']
         if not total_vacancies:
-            total_vacancies = response_data['found']
+            total_vacancies = vacancies_data['found']
         if current_page >= total_pages:
             break
         payload['page'] = current_page + 1
-        yield response_data['items'], total_vacancies
+        yield vacancies_data['items'], total_vacancies
 
 
 def fetch_sj_vacancies(language, api_key):
