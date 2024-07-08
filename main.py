@@ -38,13 +38,14 @@ def fetch_hh_vacancies(language):
         'only_with_salary': True,
         'period': PERIOD_LAST_MONTH,
     }
+    total_vacancies = 0
     while True:
         response = requests.get(BASE_URL_HH, params=payload)
         response.raise_for_status()
         response_data = response.json()
         current_page = response_data['page']
         total_pages = response_data['pages']
-        if current_page == 0:
+        if not total_vacancies:
             total_vacancies = response_data['found']
         if current_page >= total_pages:
             break
@@ -70,7 +71,7 @@ def fetch_sj_vacancies(language, api_key):
         response = requests.get(BASE_URL_SJ, headers=headers, params=payload)
         response.raise_for_status()
         page_content = response.json()
-        if payload['page'] == 0:
+        if not total_vacancies:
             total_vacancies = page_content['total']
         yield page_content['objects'], total_vacancies
         if not page_content['more']:
@@ -112,7 +113,7 @@ def get_vacancies_summary(fetch_vacancies, extract_salary, languages):
                 salary_from, salary_to, currency_in_rub = extract_salary(vacancy)
                 if currency_in_rub:
                     salary = predict_rub_salary(salary_from, salary_to)
-                    if salary > 0:
+                    if salary:
                         average_salaries.append(salary)
 
         vacancies_processed = len(average_salaries)
